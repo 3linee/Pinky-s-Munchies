@@ -1,0 +1,39 @@
+# Pinky-s-Munchies
+🐍 Panduan Game : Snake
+
+🎯 Tujuan Permainan
+Kontrol ular untuk mengumpulkan makanan stroberi sebanyak-banyaknya tanpa menabrak dinding atau tubuh sendiri!
+
+🎮 Kontrol Game
+↑ (Panah Atas) - Bergerak ke atas
+↓ (Panah Bawah) - Bergerak ke bawah
+← (Panah Kiri) - Bergerak ke kiri
+→ (Panah Kanan) - Bergerak ke kanan
+
+🍓 Sistem Skor
+୨୧ Setiap stroberi = +1 poin
+୨୧ Setiap stroberi = panjang ular bertambah 1 segmen
+୨୧ Skor tertinggi bertahan hingga game di-reset
+
+⚠️ Kondisi Game Over
+⟡ Menabrak dinding (keluar dari arena)
+⟡ Menabrak tubuh sendiri (termasuk bagian ekor)
+
+🔄 Fitur Tambahan
+𖦹 Tombol "Play Again" - Muncul otomatis saat game over
+𖦹 Grid visual - Garis bantu untuk pergerakan
+𖦹 Efek pastel - Desain warna-warni yang eye-catching
+
+💡 Tips Bermain
+ෆ Rencanakan rute pergerakan sebelum memutar arah
+ෆ Gunakan seluruh area arena untuk menghindari terjebak
+ෆ Lebih hati-hati saat ular semakin panjang
+ෆ Mata ular menunjukkan arah hadap saat ini
+
+🖥️ Spesifikasi Teknis
+☆ Ukuran arena: 25×25 kotak
+☆ Ukuran kotak: 25×25 piksel
+☆ Kecepatan: 10 frame per detik
+Platform: Python dengan Tkinter
+
+Selamat bermain dan raih skor tertinggi! 🎀

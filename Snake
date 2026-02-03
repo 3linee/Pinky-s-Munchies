@@ -1,0 +1,220 @@
+import tkinter
+import random
+
+ROWS = 25
+COLS = 25
+TILE_SIZE = 25
+
+WINDOW_WIDTH = TILE_SIZE * COLS
+WINDOW_HEIGHT = TILE_SIZE * ROWS
+
+class Tile:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+#game window
+window = tkinter.Tk()
+window.title("Snake")
+window.resizable(False, False)
+
+canvas = tkinter.Canvas(window, bg = "#FFE6F2", width = WINDOW_WIDTH, height = WINDOW_HEIGHT, borderwidth = 0, highlightthickness = 0)
+canvas.pack()
+window.update()
+
+#center the window
+window_width = window.winfo_width()
+window_height = window.winfo_height()
+screen_width = window.winfo_screenwidth()
+screen_height = window.winfo_screenheight()
+
+window_x = int((screen_width/2) - (window_width/2))
+window_y = int((screen_height/2) - (window_height/2))
+#format "(w)x(h)+(x)+(y)"
+window.geometry(f"{window_width}x{window_height}+{window_x}+{window_y}")
+
+#initialize game
+snake = Tile(5*TILE_SIZE, 5*TILE_SIZE) #single tile, snake's head
+food = Tile(10*TILE_SIZE, 10*TILE_SIZE)
+snake_body = [] #mutiple snak tiles
+velocityX = 0
+velocityY = 0
+game_over = False
+score = 0
+draw_id = None  # Variabel untuk menyimpan ID draw loop
+
+# Button for retry (initially hidden)
+retry_button = tkinter.Button(window, text="🎀 Play Again 🎀", font=("Comic Sans MS", 12, "bold"),
+                             bg="#FFB6C1", fg="#FFFFFF", activebackground="#FF69B4",
+                             activeforeground="white", relief="raised", borderwidth=3)
+
+def change_direction(e): #e = event
+    global velocityX, velocityY, game_over
+    if (game_over):
+        return
+
+    if (e.keysym == "Up" and velocityY != 1):
+        velocityX = 0
+        velocityY = -1
+    elif (e.keysym == "Down" and velocityY != -1):
+        velocityX = 0 
+        velocityY = 1
+    elif (e.keysym == "Left" and velocityX != 1):
+        velocityX = -1
+        velocityY = 0
+    elif (e.keysym == "Right" and velocityX != -1):
+        velocityX = 1
+        velocityY = 0
+
+def reset_game():
+    global snake, food, snake_body, velocityX, velocityY, game_over, score, draw_id
+    # Batalkan draw loop sebelumnya jika ada
+    if draw_id is not None:
+        window.after_cancel(draw_id)
+        draw_id = None
+    
+    snake = Tile(5*TILE_SIZE, 5*TILE_SIZE)
+    food = Tile(10*TILE_SIZE, 10*TILE_SIZE)
+    snake_body = []
+    velocityX = 0
+    velocityY = 0
+    game_over = False
+    score = 0
+    retry_button.place_forget()  # Hide retry button
+    
+    # Mulai draw loop baru dengan interval yang sama
+    draw()
+
+def move():
+    global snake, food, snake_body, game_over, score
+    if (game_over):
+        return
+    
+    if (snake.x < 0 or snake.x >= WINDOW_WIDTH or snake.y < 0 or snake.y >= WINDOW_HEIGHT):
+        game_over = True
+        return
+    
+    for tile in snake_body:
+        if (snake.x == tile.x and snake.y == tile.y):
+            game_over = True
+            return
+
+    #collision
+    if (snake.x == food.x and snake.y == food.y):
+        snake_body.append(Tile(food.x, food.y))
+        food.x = random.randint(0, COLS-1) *  TILE_SIZE
+        food.y = random.randint(0, ROWS-1) * TILE_SIZE
+        score += 1
+
+    #update snake body
+    for i in range(len(snake_body)-1, -1, -1):
+        tile = snake_body[i]
+        if (i ==0):
+            tile.x = snake.x
+            tile.y = snake.y
+        else:
+            prev_tile = snake_body[i-1]
+            tile.x = prev_tile.x
+            tile.y = prev_tile.y
+
+    snake.x += velocityX * TILE_SIZE
+    snake.y += velocityY * TILE_SIZE
+
+def draw():
+    global snake, food, snake_body, game_over, score, draw_id
+    move()
+
+    canvas.delete("all")
+
+    # Draw decorative pastel grid lines
+    for i in range(0, WINDOW_WIDTH, TILE_SIZE):
+        canvas.create_line(i, 0, i, WINDOW_HEIGHT, fill="#FFD1DC", width=0.5)
+    for i in range(0, WINDOW_HEIGHT, TILE_SIZE):
+        canvas.create_line(0, i, WINDOW_WIDTH, i, fill="#FFD1DC", width=0.5)
+
+    # Tambahkan nama pembuat di ujung layar kanan atas
+    canvas.create_text(WINDOW_WIDTH - 90, 20, 
+                      font=("Comic Sans MS", 9, "italic"), 
+                      text="by Angeline Santoso", 
+                      fill="#FF8B94")
+
+    #draw food as a cute strawberry/circle
+    food_padding = 4
+    canvas.create_oval(food.x + food_padding, food.y + food_padding, 
+                      food.x + TILE_SIZE - food_padding, food.y + TILE_SIZE - food_padding,
+                      fill="#FF9AA2", outline="#FF7B8A", width=2)
+    # Strawberry leaves
+    canvas.create_oval(food.x + 8, food.y + 2, food.x + 12, food.y + 6, fill="#A8E6CF", outline="#A8E6CF")
+    canvas.create_oval(food.x + 13, food.y + 3, food.x + 17, food.y + 7, fill="#A8E6CF", outline="#A8E6CF")
+
+    #draw snake head as cute rounded rectangle
+    head_padding = 3
+    canvas.create_oval(snake.x + head_padding, snake.y + head_padding,
+                      snake.x + TILE_SIZE - head_padding, snake.y + TILE_SIZE - head_padding,
+                      fill="#A8E6CF", outline="#84DCC6", width=2)
+    # Snake eyes
+    eye_size = 3
+    if velocityX == 1:  # Moving right
+        canvas.create_oval(snake.x + TILE_SIZE - 10, snake.y + 8,
+                          snake.x + TILE_SIZE - 10 + eye_size, snake.y + 8 + eye_size,
+                          fill="#555555")
+        canvas.create_oval(snake.x + TILE_SIZE - 10, snake.y + 15,
+                          snake.x + TILE_SIZE - 10 + eye_size, snake.y + 15 + eye_size,
+                          fill="#555555")
+    elif velocityX == -1:  # Moving left
+        canvas.create_oval(snake.x + 10, snake.y + 8,
+                          snake.x + 10 + eye_size, snake.y + 8 + eye_size,
+                          fill="#555555")
+        canvas.create_oval(snake.x + 10, snake.y + 15,
+                          snake.x + 10 + eye_size, snake.y + 15 + eye_size,
+                          fill="#555555")
+    elif velocityY == -1:  # Moving up
+        canvas.create_oval(snake.x + 8, snake.y + 10,
+                          snake.x + 8 + eye_size, snake.y + 10 + eye_size,
+                          fill="#555555")
+        canvas.create_oval(snake.x + 15, snake.y + 10,
+                          snake.x + 15 + eye_size, snake.y + 15 + eye_size,
+                          fill="#555555")
+    else:  # Moving down or stationary
+        canvas.create_oval(snake.x + 8, snake.y + TILE_SIZE - 15,
+                          snake.x + 8 + eye_size, snake.y + TILE_SIZE - 15 + eye_size,
+                          fill="#555555")
+        canvas.create_oval(snake.x + 15, snake.y + TILE_SIZE - 15,
+                          snake.x + 15 + eye_size, snake.y + TILE_SIZE - 15 + eye_size,
+                          fill="#555555")
+
+    #draw snake body as rounded rectangles
+    for tile in snake_body:
+        body_padding = 4
+        canvas.create_oval(tile.x + body_padding, tile.y + body_padding,
+                          tile.x + TILE_SIZE - body_padding, tile.y + TILE_SIZE - body_padding,
+                          fill="#B5EAD7", outline="#84DCC6", width=2)
+
+    if (game_over):
+        # Draw ribbon-like game over banner
+        canvas.create_rectangle(WINDOW_WIDTH/2 - 120, WINDOW_HEIGHT/2 - 80,
+                               WINDOW_WIDTH/2 + 120, WINDOW_HEIGHT/2 + 20,
+                               fill="#FFB6C1", outline="#FF69B4", width=3)
+        canvas.create_text(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 - 50,
+                          font=("Comic Sans MS", 18, "bold"),
+                          text="Game Over!", fill="#FFFFFF")
+        canvas.create_text(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 - 20,
+                          font=("Comic Sans MS", 14),
+                          text=f"Score: {score}", fill="#FFFFFF")
+        
+        # Show retry button
+        retry_button.config(command=reset_game)
+        retry_button.place(x=WINDOW_WIDTH/2 - 70, y=WINDOW_HEIGHT/2 + 10)
+    else:
+        # Draw pastel score display with ribbon effect
+        canvas.create_rectangle(5, 5, 100, 30, fill="#FFD3B6", outline="#FFAAA5", width=2)
+        canvas.create_text(30, 18, font=("Comic Sans MS", 10, "bold"),
+                          text=f"🍓 Score: {score}", fill="#FF8B94")
+
+    # Simpan ID draw loop dan jadwalkan dengan interval yang tetap
+    draw_id = window.after(100, draw) #100ms = 1/10 second, 10 frames/second
+
+draw()
+
+window.bind("<KeyRelease>", change_direction)
+window.mainloop()
